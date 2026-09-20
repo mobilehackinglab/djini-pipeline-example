@@ -16,7 +16,7 @@
 #        DJINI_API_KEY   (Secret)   your djini API key (sk-...)
 #        DJINI_BASE_URL  (Variable) your djini URL, e.g. https://app.djini.ai
 # ─────────────────────────────────────────────────────────────────────────────
-name: djini security scan (iOS)
+name: Djini.AI Security Scan (iOS)
 
 # Manual trigger only — run it from the Actions tab ("Run workflow").
 on:

@@ -12,7 +12,7 @@
 #        DJINI_BASE_URL  (Variable) your djini URL, e.g. https://app.djini.ai
 #   3. For your own app, point the "Build APK" step at your build.
 # ─────────────────────────────────────────────────────────────────────────────
-name: djini security scan (Android)
+name: Djini.AI Security Scan (Android)
 
 # Manual trigger only — run it from the Actions tab ("Run workflow"). Uncomment
 # push/pull_request below to gate every PR automatically.
