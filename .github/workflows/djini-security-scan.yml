@@ -83,7 +83,9 @@ jobs:
         id: djini
         env:
           API_KEY: ${{ secrets.DJINI_API_KEY }}
-          BASE_URL: ${{ secrets.DJINI_BASE_URL }}
+          # The djini URL is not sensitive — a repo variable keeps it readable in
+          # logs (a secret would be masked as ***). Only the API key is a secret.
+          BASE_URL: ${{ vars.DJINI_BASE_URL }}
         run: |
           chmod +x .github/scripts/djini-scan.sh
           .github/scripts/djini-scan.sh \

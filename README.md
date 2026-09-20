@@ -42,11 +42,18 @@ console login.
 ## Setup (one-time)
 
 1. **Create a djini API key** — djini → **Settings → API key**.
-2. **Add two repository secrets** — *Settings → Secrets and variables → Actions*:
-   | Secret | Value |
-   |--------|-------|
-   | `DJINI_API_KEY` | your djini API key (`sk-…`) |
-   | `DJINI_BASE_URL` | your djini URL, e.g. `https://app.djini.ai` |
+2. **Configure the repo** — *Settings → Secrets and variables → Actions*:
+   | Name | Kind | Value |
+   |------|------|-------|
+   | `DJINI_API_KEY` | **Secret** | your djini API key (`sk-…`) |
+   | `DJINI_BASE_URL` | **Variable** | your djini URL, e.g. `https://app.djini.ai` |
+
+   The URL isn't sensitive, so it's a repo **variable** (stays readable in the run
+   logs); only the API key is a secret. From the CLI:
+   ```bash
+   gh secret   set DJINI_API_KEY  --body 'sk-...'
+   gh variable set DJINI_BASE_URL --body 'https://app.djini.ai'
+   ```
 That's it — push (or hit **Run workflow**), and it builds `sample-app/` and scans
 it on every PR and on `main`.
 
