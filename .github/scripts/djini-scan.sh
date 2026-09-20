@@ -272,19 +272,25 @@ VER_SUFFIX=""
 [[ -n "$APP_VERSION" && "$APP_VERSION" != "?" ]] && VER_SUFFIX=" v$APP_VERSION"
 SCAN_TYPE_LABEL="Full Binary Scan"
 [[ -n "$SOURCE_DIR" ]] && SCAN_TYPE_LABEL="AI Source Code Scan"
-DJINI_LOGO='<img src="https://app.djini.ai/static/img/logo/Djini.svg" alt="Djini" height="22" align="absmiddle">'
+DJINI_LOGO='<img src="https://app.djini.ai/static/img/logo/Djini.svg" alt="Djini" height="40" align="absmiddle">'
 summary "## $DJINI_LOGO Djini.AI Security Scan — \`$APP_NAME\`$VER_SUFFIX"
 summary ""
 summary "**Scan type:** $SCAN_TYPE_LABEL · **Project:** \`$PROJECT_NAME\` · **Platform:** $PLATFORM · **Risk level:** $RISK · **Gate:** \`--fail-on $FAIL_ON\`"
 summary ""
-summary "| Severity | Count |"
-summary "|----------|------:|"
-summary "| 🔴 Critical | $CRITICAL |"
-summary "| 🟠 High | $HIGH |"
-summary "| 🟡 Medium | $MEDIUM |"
-summary "| 🟢 Low | $LOW |"
-summary "| 🔵 Informational | $INFO |"
-summary "| **Total** | **$TOTAL** |"
+# Clean, muted count badges (shields.io) — zeros go gray so the eye lands on
+# what actually matters. GitHub strips CSS, so images are the way to get colour.
+sev_badge() {  # $1=count  $2=hex colour when >0
+  local color="$2"; [[ "${1:-0}" -eq 0 ]] && color="e5e7eb"
+  echo "![${1}](https://img.shields.io/badge/${1}-${color}?style=flat-square)"
+}
+summary "| Severity | Findings |"
+summary "|----------|:--------:|"
+summary "| Critical      | $(sev_badge "$CRITICAL" e5484d) |"
+summary "| High          | $(sev_badge "$HIGH" f3801f) |"
+summary "| Medium        | $(sev_badge "$MEDIUM" e0b000) |"
+summary "| Low           | $(sev_badge "$LOW" 30a46c) |"
+summary "| Informational | $(sev_badge "$INFO" 4a90d9) |"
+summary "| **Total**     | **$TOTAL** |"
 summary ""
 summary "[View full report in djini]($REPORT_URL)"
 
