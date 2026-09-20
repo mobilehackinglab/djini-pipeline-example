@@ -110,6 +110,9 @@ CURL_OPTS=(-sS --fail-with-body)
 [[ -n "$SKIP_TLS_VERIFY" ]] && CURL_OPTS+=(-k)
 AUTH=(-H "Authorization: Bearer $API_KEY")
 
+# Bound for `set -u`: the source-only path doesn't have a binary version.
+APP_VERSION=""
+
 # ── 1. create project + start scan ───────────────────────────────────────────
 if [[ -n "$SOURCE_DIR" ]]; then
   # ── Source-only fast path ──────────────────────────────────────────────────
@@ -264,7 +267,9 @@ fi
 
 # ── 7. GitHub Step Summary ───────────────────────────────────────────────────
 REPORT_URL="${BASE_URL}/dashboard/scans/${PROJECT_NAME}/report"
-summary "## 🛡️ djini security scan — \`$APP_NAME\` v$APP_VERSION"
+VER_SUFFIX=""
+[[ -n "$APP_VERSION" && "$APP_VERSION" != "?" ]] && VER_SUFFIX=" v$APP_VERSION"
+summary "## 🛡️ djini security scan — \`$APP_NAME\`$VER_SUFFIX"
 summary ""
 summary "**Project:** \`$PROJECT_NAME\` · **Platform:** $PLATFORM · **Risk level:** $RISK · **Gate:** \`--fail-on $FAIL_ON\`"
 summary ""
