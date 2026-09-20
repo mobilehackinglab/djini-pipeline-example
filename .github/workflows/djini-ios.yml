@@ -76,12 +76,12 @@ jobs:
           BASE_URL: ${{ vars.DJINI_BASE_URL }}
         run: |
           chmod +x .github/scripts/djini-scan.sh
-          # quick-source scans the Objective-C source (sample-app-ios/challenge);
+          # quick-source scans the Objective-C source (sample-app-ios);
           # 'full' omits --source and runs the binary scan of the .ipa.
           .github/scripts/djini-scan.sh \
             --file "${{ steps.build.outputs.artifact }}" \
             --fail-on "${{ inputs.fail_on || 'high' }}" \
-            ${{ (inputs.scan_type != 'full') && '--source sample-app-ios/challenge' || '' }} \
+            ${{ (inputs.scan_type != 'full') && '--source sample-app-ios' || '' }} \
             ${{ (inputs.deep_scan && '--deep-scan') || '' }} \
             --output "djini-report.pdf" \
             --findings "djini-findings.json" \

@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # djini mobile security scan — ANDROID (GitHub Actions demo)
 #
-# Builds the bundled Android lab (sample-app/), scans it with djini, attaches the
+# Builds the bundled Android lab (sample-app-android/), scans it with djini, attaches the
 # report + SARIF to the run, and fails the build when findings exceed your
 # threshold. See djini-ios.yml for the iOS equivalent.
 #
@@ -63,12 +63,12 @@ jobs:
       - name: Provide APK
         id: build
         run: |
-          apk="sample-app/mhl-lab-tokenbleed.apk"
+          apk="sample-app-android/mhl-lab-tokenbleed.apk"
           test -f "$apk" || { echo "::error::$apk not found"; exit 1; }
           echo "artifact=$apk" >> "$GITHUB_OUTPUT"
 
       # ── Build from source (alternative to the prebuilt APK above) ──────────
-      # Uncomment to build sample-app/ with Gradle and scan the fresh APK. For
+      # Uncomment to build sample-app-android/ with Gradle and scan the fresh APK. For
       # your own project, point these steps at your build — the only contract is
       # that `steps.build.outputs.artifact` holds the path to a single .apk/.aab.
       #
@@ -83,12 +83,12 @@ jobs:
       #
       # - name: Build APK
       #   id: build
-      #   working-directory: sample-app
+      #   working-directory: sample-app-android
       #   run: |
       #     chmod +x ./gradlew
       #     ./gradlew --no-daemon assembleRelease
       #     apk="$(ls app/build/outputs/apk/release/*.apk | head -1)"
-      #     echo "artifact=sample-app/$apk" >> "$GITHUB_OUTPUT"
+      #     echo "artifact=sample-app-android/$apk" >> "$GITHUB_OUTPUT"
 
       - name: Install scan dependencies
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq
@@ -108,7 +108,7 @@ jobs:
           .github/scripts/djini-scan.sh \
             --file "${{ steps.build.outputs.artifact }}" \
             --fail-on "${{ inputs.fail_on || 'high' }}" \
-            ${{ (inputs.scan_type != 'full') && '--source sample-app' || '' }} \
+            ${{ (inputs.scan_type != 'full') && '--source sample-app-android' || '' }} \
             ${{ (inputs.deep_scan && '--deep-scan') || '' }} \
             --output "djini-report.pdf" \
             --findings "djini-findings.json" \

@@ -9,7 +9,7 @@ djini-results.sarif
 *.ipa
 # ...except the demo's prebuilt binaries (used so the pipelines run without a
 # build toolchain / iOS signing secrets)
-!sample-app/mhl-lab-tokenbleed.apk
+!sample-app-android/mhl-lab-tokenbleed.apk
 !sample-app-ios/Linkliar.ipa
 
 # OS / editor cruft

@@ -10,7 +10,7 @@ lab app:
 
 | Pipeline | Workflow | Lab app | Binary |
 |----------|----------|---------|--------|
-| **Android** | `djini-android.yml` | [`sample-app/`](sample-app/) (Gradle) | prebuilt APK by default¹ |
+| **Android** | `djini-android.yml` | [`sample-app-android/`](sample-app-android/) (Gradle) | prebuilt APK by default¹ |
 | **iOS** | `djini-ios.yml` | [`sample-app-ios/`](sample-app-ios/) (Objective-C "Linkliar") | prebuilt IPA² |
 
 Both are **manual** (run from the **Actions** tab → *Run workflow*) — uncomment the
@@ -19,7 +19,7 @@ project, point its build step at your app (the only contract is that it hands th
 scan a single `.apk` / `.aab` / `.ipa`).
 
 ¹ To keep the demo fast, the Android workflow uses the committed prebuilt APK; a
-commented-out Gradle block builds `sample-app/` from source instead.
+commented-out Gradle block builds `sample-app-android/` from source instead.
 ² Building an `.ipa` in CI needs Apple signing secrets, which a demo shouldn't
 require — so the iOS workflow uses the committed prebuilt IPA and scans the
 Objective-C source. Swap in a `macos-latest` `xcodebuild` job to build for real
@@ -36,8 +36,8 @@ severity gate, SARIF upload, build artifacts, and a GitHub job summary.
 │   │   ├── djini-android.yml    # Android pipeline
 │   │   └── djini-ios.yml        # iOS pipeline
 │   └── scripts/djini-scan.sh    # the scan runner (curl + jq), shared
-├── sample-app/                  # bundled Android lab (Gradle)
-├── sample-app-ios/              # bundled iOS lab (Objective-C) + prebuilt IPA
+├── sample-app-android/         # bundled Android lab (Gradle) + prebuilt APK
+├── sample-app-ios/             # bundled iOS lab (Objective-C) + prebuilt IPA
 └── README.md
 ```
 
@@ -78,7 +78,7 @@ That's it — go to the **Actions** tab, pick **djini security scan (Android)** 
 ([`djini-android.yml`](.github/workflows/djini-android.yml) /
 [`djini-ios.yml`](.github/workflows/djini-ios.yml)) replace the build step so
 `steps.build.outputs.artifact` points at your built file, and delete the bundled
-`sample-app/` / `sample-app-ios/` you don't need.
+`sample-app-android/` / `sample-app-ios/` you don't need.
 
 > **Adding this to an existing repo instead of using this template?** Copy the
 > workflow you want and `.github/scripts/djini-scan.sh` into the same paths in
@@ -99,7 +99,7 @@ source scan (it sends that tree to djini and triggers the source scan); omit it 
 the full binary scan. `--deep-scan` only applies to `full`.
 
 Both modes still build + upload the app so djini has the artifact; `quick-source`
-additionally sends the source tree (`sample-app/`) and scans that instead of
+additionally sends the source tree (`sample-app-android/`) and scans that instead of
 decompiling.
 
 ## Tuning the gate
