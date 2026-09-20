@@ -48,28 +48,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ── Build your app ────────────────────────────────────────────────────
-      # Replace this with your real build. The goal is to produce a single
-      # artifact (.apk / .aab / .ipa) and expose its path as an output.
-      #
-      # Android (Gradle) example:
-      #   - uses: actions/setup-java@v4
-      #     with: { distribution: temurin, java-version: "17" }
-      #   - run: ./gradlew assembleRelease
-      #   - id: build
-      #     run: echo "artifact=$(ls app/build/outputs/apk/release/*.apk | head -1)" >> "$GITHUB_OUTPUT"
+      # ── Build the app ─────────────────────────────────────────────────────
+      # This demo builds the bundled sample Android app (sample-app/, an
+      # intentionally-vulnerable lab). For your own project, point these steps
+      # at your build — the only contract is that `steps.build.outputs.artifact`
+      # ends up holding the path to a single .apk / .aab / .ipa.
       #
       # iOS: archive & export a .ipa on a `macos-latest` runner, then upload it
       # as an artifact and download it in an ubuntu job that runs the scan.
-      - name: Build (demo placeholder)
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APK
         id: build
+        working-directory: sample-app
         run: |
-          # Demo only: fail loudly until you wire up your real build above.
-          if [ -z "${DEMO_ARTIFACT:-}" ]; then
-            echo "::error::Replace the 'Build' step with your app's build and set steps.build.outputs.artifact"
-            exit 1
-          fi
-          echo "artifact=$DEMO_ARTIFACT" >> "$GITHUB_OUTPUT"
+          chmod +x ./gradlew
+          ./gradlew --no-daemon assembleRelease
+          apk="$(ls app/build/outputs/apk/release/*.apk | head -1)"
+          echo "Built: $apk"
+          echo "artifact=sample-app/$apk" >> "$GITHUB_OUTPUT"
 
       - name: Install scan dependencies
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq

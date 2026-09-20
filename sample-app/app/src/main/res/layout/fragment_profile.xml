@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/mhl_bg_light"
+    android:paddingTop="16dp">
+
+    <!-- Header (Consistent with Dashboard) -->
+    <LinearLayout
+        android:id="@+id/profile_header"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="123dp"
+            android:layout_height="49dp"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/mobile_hacking_lab_logo" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="Exchange"
+            android:textColor="@color/design_default_color_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Profile Info Card (Much Nicer UI) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/profile_info_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/profile_header"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="24dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingVertical="8dp">
+
+            <!-- Name Row -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="16dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Name"
+                    android:layout_centerVertical="true"
+                    android:textColor="@color/mhl_text_secondary"/>
+                <TextView
+                    android:id="@+id/user_name_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Loading..."
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:textColor="@color/mhl_text_primary"
+                    android:textStyle="bold"/>
+            </RelativeLayout>
+
+            <!-- Divider -->
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/mhl_bg_light" android:layout_marginHorizontal="16dp"/>
+
+            <!-- Email Row -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="16dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Email"
+                    android:layout_centerVertical="true"
+                    android:textColor="@color/mhl_text_secondary"/>
+                <TextView
+                    android:id="@+id/user_email_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Loading..."
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:textColor="@color/mhl_text_primary"
+                    android:textStyle="bold"/>
+            </RelativeLayout>
+
+            <!-- Divider -->
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/mhl_bg_light" android:layout_marginHorizontal="16dp"/>
+
+            <!-- Tier Row -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="16dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Membership Tier"
+                    android:layout_centerVertical="true"
+                    android:textColor="@color/mhl_text_secondary"/>
+                <TextView
+                    android:id="@+id/user_tier_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Loading..."
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:textColor="@color/mhl_text_primary"
+                    android:textStyle="bold"/>
+            </RelativeLayout>
+            
+            <!-- Divider -->
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/mhl_bg_light" android:layout_marginHorizontal="16dp"/>
+
+            <!-- NEW: Help Center Button -->
+            <RelativeLayout
+                android:id="@+id/help_center_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="Help Center"
+                    android:textColor="@color/mhl_text_secondary" />
+
+                <ImageView
+                    android:layout_width="49dp"
+                    android:layout_height="34dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginEnd="8dp"
+                    android:src="@android:drawable/stat_sys_headset"
+                    app:tint="@color/mhl_text_secondary" />
+            </RelativeLayout>
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Logout Button (Moved to the bottom) -->
+    <Button
+        android:id="@+id/logout_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="16dp"
+        android:background="@drawable/button_green_filled_rounded"
+        android:text="Logout"
+        android:textColor="@color/white"
+        android:textAllCaps="false" />
+
+</RelativeLayout>

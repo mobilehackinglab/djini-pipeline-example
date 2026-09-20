@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base App Colors -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- New MHLCrypto Green Theme Colors -->
+    <color name="mhl_green">#55a29b</color>
+    <color name="mhl_green_dark">#44827c</color>
+    <color name="mhl_bg_light">#FFFFFF</color>
+    <color name="mhl_text_primary">#212121</color>
+    <color name="mhl_text_secondary">#757575</color>
+    <color name="mhl_positive_gain">#2E7D32</color> <!-- A darker green for performance text -->
+</resources>

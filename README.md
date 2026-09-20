@@ -5,17 +5,22 @@ scan inside a GitHub Actions pipeline: build the app → upload to djini → wai
 the scan → surface findings in the PR (GitHub Code Scanning) → attach the report →
 **fail the build when findings exceed a threshold**.
 
-Use it as a template: fork/copy it, add two secrets, point the build step at your
-app, and you have djini in CI. It uses the same public API as the `example.sh`
-script you can download from your djini **Settings → Pipeline integration** page —
-just wired for CI, with a severity gate, SARIF upload, build artifacts, and a
-GitHub job summary.
+This repo is **runnable as-is**: it bundles a real Android lab app under
+[`sample-app/`](sample-app/), and the workflow builds it with Gradle and scans the
+resulting APK — a complete build → scan → gate pipeline you can watch end-to-end.
+To adopt it for your own project, swap the build step for your app's build (the
+only contract is that it hands the scan a single `.apk` / `.aab` / `.ipa`).
+
+It uses the same public API as the `example.sh` script you can download from your
+djini **Settings → Pipeline integration** page — just wired for CI, with a
+severity gate, SARIF upload, build artifacts, and a GitHub job summary.
 
 ```
 .
 ├── .github/
 │   ├── workflows/djini-security-scan.yml   # the workflow
 │   └── scripts/djini-scan.sh               # the scan runner (curl + jq)
+├── sample-app/                             # bundled Android lab (Gradle) it builds & scans
 └── README.md
 ```
 
@@ -42,12 +47,13 @@ console login.
    |--------|-------|
    | `DJINI_API_KEY` | your djini API key (`sk-…`) |
    | `DJINI_BASE_URL` | your djini URL, e.g. `https://app.djini.ai` |
-3. **Wire up your build** — replace the `Build (demo placeholder)` step in
-   [`.github/workflows/djini-security-scan.yml`](.github/workflows/djini-security-scan.yml)
-   so it produces your app and sets `steps.build.outputs.artifact` to the built
-   file's path. Android and iOS snippets are in the workflow comments.
+That's it — push (or hit **Run workflow**), and it builds `sample-app/` and scans
+it on every PR and on `main`.
 
-That's it — push, and the scan runs on every PR and on `main`.
+**To scan your own app instead:** replace the `Build APK` step in
+[`.github/workflows/djini-security-scan.yml`](.github/workflows/djini-security-scan.yml)
+with your build, so `steps.build.outputs.artifact` points at your built file, and
+delete `sample-app/` if you don't need it. An iOS note is in the workflow comments.
 
 > **Adding this to an existing repo instead of using this template?** Copy
 > `.github/workflows/djini-security-scan.yml` and `.github/scripts/djini-scan.sh`

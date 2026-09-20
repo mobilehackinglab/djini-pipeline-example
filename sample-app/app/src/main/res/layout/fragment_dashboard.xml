@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/mhl_bg_light"
+    android:fillViewport="true">
+
+    <!-- The root LinearLayout now has paddingTop to give space from the status bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="16dp" 
+        android:paddingBottom="24dp">
+
+        <!-- ===== MODIFIED: Toolbar Section with Logo and Text ===== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <!-- The Logo Image -->
+
+            <!-- The "Exchange" Text -->
+            <ImageView
+                android:layout_width="123dp"
+                android:layout_height="50dp"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/mobile_hacking_lab_logo" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="Exchange"
+                android:textColor="@color/design_default_color_primary"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+        <!-- ===== END OF MODIFICATION ===== -->
+
+
+        <!-- Portfolio Value Section (Unchanged) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:layout_marginTop="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total portfolio value"
+                android:textColor="@color/mhl_text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$ 23,456.78"
+                android:textColor="@color/mhl_text_primary"
+                android:textSize="34sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="+5.56%"
+                android:textColor="@color/mhl_positive_gain"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+
+        <!-- Action Buttons (Verified Green) -->
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/button_outline_rounded"
+            android:paddingVertical="12dp"
+            android:text="Deposit Crypto"
+            android:textAllCaps="true"
+            android:textColor="@color/mhl_text_primary" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Swap"
+                android:background="@drawable/button_green_filled_rounded"
+                android:textColor="@color/white"
+                android:textAllCaps="false"
+                android:layout_marginEnd="8dp"/>
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Buy"
+                android:background="@drawable/button_green_filled_rounded"
+                android:textColor="@color/white"
+                android:textAllCaps="false"
+                android:layout_marginEnd="8dp"/>
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Earn"
+                android:background="@drawable/button_green_filled_rounded"
+                android:textColor="@color/white"
+                android:textAllCaps="false"/>
+        </LinearLayout>
+
+
+        <!-- باقي الواجهة يبقى كما هو... -->
+        <!-- The Vulnerable Promo Slider -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/promo_viewpager"
+            android:layout_width="match_parent"
+            android:layout_height="420px"
+            android:layout_marginTop="8dp"
+            android:paddingHorizontal="40dp" />
+
+        <!-- Markets Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Markets"
+            android:textColor="@color/mhl_text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp"
+            android:layout_marginStart="16dp"/>
+
+        <!-- Static Market Items... -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <ImageView
+                android:id="@+id/btc_icon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_centerVertical="true"
+                android:contentDescription="btc icon"
+                android:src="@drawable/btc_icon" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="12dp"
+                android:layout_toEndOf="@id/btc_icon"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bitcoin BTC"
+                    android:textColor="@color/mhl_text_primary"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="$123,313.37"
+                    android:textColor="@color/mhl_text_secondary" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:text="24h Vol 271.55M"
+                android:textColor="@color/mhl_text_secondary"
+                android:textSize="12sp"/>
+        </RelativeLayout>
+
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <ImageView
+                android:id="@+id/eth_icon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_centerVertical="true"
+                android:contentDescription="eth icon"
+                android:src="@drawable/eth_icon" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="12dp"
+                android:layout_toEndOf="@id/eth_icon"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ethereum ETH"
+                    android:textColor="@color/mhl_text_primary"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="$2,669.69"
+                    android:textColor="@color/mhl_text_secondary" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:text="24h Vol 23.33M"
+                android:textColor="@color/mhl_text_secondary"
+                android:textSize="12sp"/>
+        </RelativeLayout>
+                <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <ImageView
+                android:id="@+id/tether_icon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_centerVertical="true"
+                android:contentDescription="tether icon"
+                android:src="@drawable/tether_icon" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="12dp"
+                android:layout_toEndOf="@id/tether_icon"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tehter USDT"
+                    android:textColor="@color/mhl_text_primary"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="$1.00"
+                    android:textColor="@color/mhl_text_secondary" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:text="24h Vol 80.85M"
+                android:textColor="@color/mhl_text_secondary"
+                android:textSize="12sp"/>
+        </RelativeLayout>
+    </LinearLayout>
+</ScrollView>
