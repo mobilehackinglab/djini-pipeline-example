@@ -292,7 +292,31 @@ summary "| Low           | $(sev_badge "$LOW" 30a46c) |"
 summary "| Informational | $(sev_badge "$INFO" 4a90d9) |"
 summary "| **Total**     | **$TOTAL** |"
 summary ""
-summary "[View full report in djini]($REPORT_URL)"
+
+# ── Findings grouped by the 8 MASVS categories (from the SARIF) ──────────────
+if [[ -f "$SARIF_OUT" && "$TOTAL" -gt 0 ]]; then
+  ROWS=$(jq -r '
+    .runs[].results[]?
+    | (.properties.masvs // "Other") as $c
+    | (.properties.severity // "Unknown") as $s
+    | ({Critical:0,High:1,Medium:2,Low:3,Informational:4}[$s] // 5) as $r
+    | [ $c, ($r|tostring), $s, ((.message.text // "") | split("—")[0] | gsub("^\\s+|\\s+$";"") | .[0:90]) ]
+    | @tsv' "$SARIF_OUT" 2>/dev/null | sort -t"$(printf '\t')" -k1,1 -k2,2n)
+  if [[ -n "$ROWS" ]]; then
+    summary "### Findings by MASVS category"
+    summary ""
+    summary "| MASVS Category | Severity | Finding |"
+    summary "|---------------|----------|---------|"
+    while IFS="$(printf '\t')" read -r cat _rank sev title; do
+      [[ -z "$cat" ]] && continue
+      summary "| $cat | $sev | $title |"
+    done <<< "$ROWS"
+    summary ""
+  fi
+fi
+
+DETAILS_URL="${BASE_URL}/dashboard/scans/${PROJECT_NAME}"
+summary "📄 [View full report]($REPORT_URL) · 🔎 [Scan details]($DETAILS_URL)"
 
 # ── 8. gate the build ────────────────────────────────────────────────────────
 header "Gate (--fail-on $FAIL_ON)"
