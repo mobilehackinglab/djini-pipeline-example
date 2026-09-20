@@ -39,6 +39,7 @@ TIMEOUT="${TIMEOUT:-5400}"        # give up after this many seconds (0 = no limi
 OUTPUT="${OUTPUT:-}"              # PDF report path
 FINDINGS_JSON="${FINDINGS_JSON:-}"   # findings JSON path
 SARIF_OUT="${SARIF_OUT:-}"       # SARIF report path (for GitHub Code Scanning)
+SOURCE_DIR="${SOURCE_DIR:-}"     # if set: run the fast AI source scan on this source tree
 SKIP_TLS_VERIFY="${SKIP_TLS_VERIFY:-}"
 VERBOSE="${VERBOSE:-}"
 
@@ -71,6 +72,7 @@ while [[ $# -gt 0 ]]; do
     -o|--output)        OUTPUT="$2";          shift 2;;
     --findings)         FINDINGS_JSON="$2";   shift 2;;
     --sarif)            SARIF_OUT="$2";       shift 2;;
+    --source)           SOURCE_DIR="$2";      shift 2;;
     --skip-tls-verify)  SKIP_TLS_VERIFY=1;    shift;;
     -V|--verbose)       VERBOSE=1;            shift;;
     -h|--help)
@@ -127,6 +129,38 @@ emit_output "project" "$PROJECT_NAME"
 emit_output "app_name" "$APP_NAME"
 
 # ── 2. process ───────────────────────────────────────────────────────────────
+if [[ -n "$SOURCE_DIR" ]]; then
+  # Fast path: AI source scan on the real source (no decompile, no device).
+  # Send the source tree to /git-clone, then trigger /source-scan.
+  [[ -d "$SOURCE_DIR" ]] || die "Source dir not found: $SOURCE_DIR"
+  command -v zip >/dev/null 2>&1 || die "'zip' is required for --source"
+
+  header "Source"
+  SRC_ZIP="$(mktemp -t djini-src-XXXX).zip"
+  echo "  Packaging $SOURCE_DIR ..."
+  ( cd "$SOURCE_DIR" && zip -qr "$SRC_ZIP" . \
+      -x '*/build/*' '*/.gradle/*' '*/.git/*' '*/node_modules/*' '*/Pods/*' '*.apk' '*.aab' '*.ipa' )
+
+  echo "  Uploading source to djini ..."
+  GC_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
+    -F "file=@$SRC_ZIP" \
+    "${BASE_URL}/api/dashboard/scans/${PROJECT_NAME}/git-clone") || die "Source upload (git-clone) failed"
+  rm -f "$SRC_ZIP"
+  GC_ERROR=$(echo "$GC_RESP" | jq -r '.error // empty')
+  [[ -n "$GC_ERROR" ]] && die "Source rejected: $GC_ERROR"
+
+  header "AI source scan"
+  echo "  Starting AI source scan (MASVS swarm) for $PROJECT_NAME ..."
+  SS_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
+    -X POST -H "Content-Type: application/json" -d '{}' \
+    "${BASE_URL}/api/dashboard/scans/${PROJECT_NAME}/source-scan") || die "source-scan request failed"
+  SS_ERROR=$(echo "$SS_RESP" | jq -r '.error // empty')
+  [[ -n "$SS_ERROR" ]] && die "AI source scan failed to start: $SS_ERROR"
+  echo "  Scan started."
+  # fall through to polling
+fi
+
+if [[ -z "$SOURCE_DIR" ]]; then
 header "Process"
 # Set the scan depth explicitly so djini doesn't fall back to a server-side
 # default (or config inherited from a previous scan of the same app). deepScan
@@ -143,6 +177,7 @@ PROCESS_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
 PROCESS_ERROR=$(echo "$PROCESS_RESP" | jq -r '.error // empty')
 [[ -n "$PROCESS_ERROR" ]] && die "Process failed: $PROCESS_ERROR"
 echo "  Scan started."
+fi   # end: standard (non --source) scan path
 
 # ── 3. poll ──────────────────────────────────────────────────────────────────
 header "Polling scan: $PROJECT_NAME"

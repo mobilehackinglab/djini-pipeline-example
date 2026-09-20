@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="4H3-lz-CNE">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Linkliar" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TitleLabel">
+                                <rect key="frame" x="20" y="192" width="353" height="29"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="24"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Enter URL to verify (e.g., https://example.com)" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="M1S-Jk-wXo">
+                                <rect key="frame" x="20" y="241" width="353" height="34"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                <textInputTraits key="textInputTraits" autocorrectionType="no" keyboardType="URL"/>
+                            </textField>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ScanButton">
+                                <rect key="frame" x="20" y="295" width="353" height="44"/>
+                                <color key="backgroundColor" systemColor="systemBlueColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="44" id="ScanButton-Height"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="18"/>
+                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                <state key="normal" title="Scan URL">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <real key="value" value="8"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <action selector="scanURL:" destination="BYZ-38-t0r" eventType="touchUpInside" id="ScanButton-Action"/>
+                                </connections>
+                            </button>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="ActivityIndicator">
+                                <rect key="frame" x="186.66666666666666" y="359" width="20" height="20"/>
+                            </activityIndicatorView>
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ScrollView">
+                                <rect key="frame" x="20" y="399" width="353" height="385"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Enter a URL above and tap 'Scan URL' to verify its safety" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ResultLabel">
+                                        <rect key="frame" x="20" y="20.000000000000004" width="313" height="38.333333333333343"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstAttribute="bottom" secondItem="ResultLabel" secondAttribute="bottom" constant="20" id="ResultLabel-Bottom"/>
+                                    <constraint firstItem="ResultLabel" firstAttribute="leading" secondItem="ScrollView" secondAttribute="leading" constant="20" id="ResultLabel-Leading"/>
+                                    <constraint firstItem="ResultLabel" firstAttribute="top" secondItem="ScrollView" secondAttribute="top" constant="20" id="ResultLabel-Top"/>
+                                    <constraint firstAttribute="trailing" secondItem="ResultLabel" secondAttribute="trailing" constant="20" id="ResultLabel-Trailing"/>
+                                    <constraint firstItem="ResultLabel" firstAttribute="width" secondItem="ScrollView" secondAttribute="width" constant="-40" id="ResultLabel-Width"/>
+                                </constraints>
+                            </scrollView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="ActivityIndicator" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="ActivityIndicator-CenterX"/>
+                            <constraint firstItem="ActivityIndicator" firstAttribute="top" secondItem="ScanButton" secondAttribute="bottom" constant="20" id="ActivityIndicator-Top"/>
+                            <constraint firstItem="ScanButton" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="ScanButton-Leading"/>
+                            <constraint firstItem="ScanButton" firstAttribute="top" secondItem="M1S-Jk-wXo" secondAttribute="bottom" constant="20" id="ScanButton-Top"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="ScanButton" secondAttribute="trailing" constant="20" id="ScanButton-Trailing"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="ScrollView" secondAttribute="bottom" id="ScrollView-Bottom"/>
+                            <constraint firstItem="ScrollView" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="ScrollView-Leading"/>
+                            <constraint firstItem="ScrollView" firstAttribute="top" secondItem="ActivityIndicator" secondAttribute="bottom" constant="20" id="ScrollView-Top"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="ScrollView" secondAttribute="trailing" constant="20" id="ScrollView-Trailing"/>
+                            <constraint firstItem="TitleLabel" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="TitleLabel-Leading"/>
+                            <constraint firstItem="TitleLabel" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="20" id="TitleLabel-Top"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="TitleLabel" secondAttribute="trailing" constant="20" id="TitleLabel-Trailing"/>
+                            <constraint firstItem="M1S-Jk-wXo" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="URLTextField-Leading"/>
+                            <constraint firstItem="M1S-Jk-wXo" firstAttribute="top" secondItem="TitleLabel" secondAttribute="bottom" constant="20" id="URLTextField-Top"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="M1S-Jk-wXo" secondAttribute="trailing" constant="20" id="URLTextField-Trailing"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="Dn7-cC-xIi"/>
+                    <connections>
+                        <outlet property="activityIndicator" destination="ActivityIndicator" id="ActivityIndicator-Outlet"/>
+                        <outlet property="resultLabel" destination="ResultLabel" id="ResultLabel-Outlet"/>
+                        <outlet property="scanButton" destination="ScanButton" id="ScanButton-Outlet"/>
+                        <outlet property="urlTextField" destination="M1S-Jk-wXo" id="URLTextField-Outlet"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-312.21374045801525" y="123.94366197183099"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="1LV-Xe-qTc">
+            <objects>
+                <navigationController id="4H3-lz-CNE" sceneMemberID="viewController">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="BRr-R0-WHR">
+                        <rect key="frame" x="0.0" y="118" width="393" height="54"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="kPy-AQ-nDf"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="VMv-gk-nqy" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1231" y="124"/>
+        </scene>
+    </scenes>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemBlueColor">
+            <color red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+    </resources>
+</document>

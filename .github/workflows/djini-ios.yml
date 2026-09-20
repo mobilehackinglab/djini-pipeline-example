@@ -1,0 +1,106 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# djini mobile security scan — iOS (GitHub Actions demo)
+#
+# Scans the bundled iOS lab (sample-app-ios/, the Objective-C "Linkliar" app).
+#
+# Building an .ipa in CI needs Apple signing (certificate + provisioning profile),
+# which a demo shouldn't require — so this workflow uses the app's prebuilt
+# sample-app-ios/Linkliar.ipa for the upload and scans the Objective-C source in
+# quick-source mode. To build for real, replace the "Provide IPA" step with a
+# `macos-latest` job that runs `xcodebuild archive` + `-exportArchive` using your
+# signing secrets, and point steps.build.outputs.artifact at the exported .ipa.
+#
+# Setup (one-time):
+#   1. Create a djini API key:  djini → Settings → API key.
+#   2. Repo → Settings → Secrets and variables → Actions:
+#        DJINI_API_KEY   (Secret)   your djini API key (sk-...)
+#        DJINI_BASE_URL  (Variable) your djini URL, e.g. https://app.djini.ai
+# ─────────────────────────────────────────────────────────────────────────────
+name: djini security scan (iOS)
+
+# Manual trigger only — run it from the Actions tab ("Run workflow").
+on:
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: "Scan type"
+        type: choice
+        default: quick-source
+        options:
+          - quick-source   # fast AI source scan (MASVS/MASWE) on the Objective-C source
+          - full           # full binary scan (decompile + dynamic) of the .ipa
+      fail_on:
+        description: "Fail the build at/above this severity"
+        type: choice
+        default: high
+        options: [critical, high, medium, low, none]
+      deep_scan:
+        description: "Also run the deep scan (only applies to 'full')"
+        type: boolean
+        default: false
+
+concurrency:
+  group: djini-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-scan:
+    name: Scan
+    runs-on: ubuntu-latest      # no macOS/signing needed — we use the prebuilt IPA
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      security-events: write   # required to upload SARIF to GitHub Code Scanning
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Provide the IPA ───────────────────────────────────────────────────
+      # Demo: use the committed prebuilt IPA (no signing). For a real build,
+      # swap this for a macos-latest xcodebuild archive/export job.
+      - name: Provide IPA
+        id: build
+        run: |
+          ipa="sample-app-ios/Linkliar.ipa"
+          test -f "$ipa" || { echo "::error::$ipa not found"; exit 1; }
+          echo "artifact=$ipa" >> "$GITHUB_OUTPUT"
+
+      - name: Install scan dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq
+
+      # ── Scan with djini ───────────────────────────────────────────────────
+      - name: Run djini scan
+        id: djini
+        env:
+          API_KEY: ${{ secrets.DJINI_API_KEY }}
+          BASE_URL: ${{ vars.DJINI_BASE_URL }}
+        run: |
+          chmod +x .github/scripts/djini-scan.sh
+          # quick-source scans the Objective-C source (sample-app-ios/challenge);
+          # 'full' omits --source and runs the binary scan of the .ipa.
+          .github/scripts/djini-scan.sh \
+            --file "${{ steps.build.outputs.artifact }}" \
+            --fail-on "${{ inputs.fail_on || 'high' }}" \
+            ${{ (inputs.scan_type != 'full') && '--source sample-app-ios/challenge' || '' }} \
+            ${{ (inputs.deep_scan && '--deep-scan') || '' }} \
+            --output "djini-report.pdf" \
+            --findings "djini-findings.json" \
+            --sarif "djini-results.sarif"
+
+      - name: Upload SARIF to code scanning
+        if: always() && hashFiles('djini-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: djini-results.sarif
+          category: djini-ios
+
+      - name: Upload djini report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: djini-report-ios
+          path: |
+            djini-report.pdf
+            djini-findings.json
+            djini-results.sarif
+          if-no-files-found: warn

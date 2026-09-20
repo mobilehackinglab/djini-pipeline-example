@@ -7,6 +7,8 @@ djini-results.sarif
 *.apk
 *.aab
 *.ipa
+# ...except the iOS demo's prebuilt IPA (CI can't sign a build without secrets)
+!sample-app-ios/Linkliar.ipa
 
 # OS / editor cruft
 .DS_Store

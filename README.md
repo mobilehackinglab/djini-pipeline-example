@@ -5,11 +5,23 @@ scan inside a GitHub Actions pipeline: build the app → upload to djini → wai
 the scan → surface findings in the PR (GitHub Code Scanning) → attach the report →
 **fail the build when findings exceed a threshold**.
 
-This repo is **runnable as-is**: it bundles a real Android lab app under
-[`sample-app/`](sample-app/), and the workflow builds it with Gradle and scans the
-resulting APK — a complete build → scan → gate pipeline you can watch end-to-end.
-To adopt it for your own project, swap the build step for your app's build (the
-only contract is that it hands the scan a single `.apk` / `.aab` / `.ipa`).
+This repo is **runnable as-is** and ships **two pipelines**, each with a bundled
+lab app:
+
+| Pipeline | Workflow | Lab app | Build |
+|----------|----------|---------|-------|
+| **Android** | `djini-android.yml` | [`sample-app/`](sample-app/) (Gradle) | builds the APK in CI |
+| **iOS** | `djini-ios.yml` | [`sample-app-ios/`](sample-app-ios/) (Objective-C "Linkliar") | uses the prebuilt `.ipa`¹ |
+
+Both are **manual** (run from the **Actions** tab → *Run workflow*) — uncomment the
+`push`/`pull_request` triggers to gate PRs automatically. To adopt one for your own
+project, swap its build step for your app's build (the only contract is that it
+hands the scan a single `.apk` / `.aab` / `.ipa`).
+
+¹ Building an `.ipa` in CI needs Apple signing secrets, which a demo shouldn't
+require — so the iOS workflow uses the committed prebuilt IPA for the upload and
+scans the Objective-C source. Swap in a `macos-latest` `xcodebuild` job to build
+for real (see the workflow header).
 
 It uses the same public API as the `example.sh` script you can download from your
 djini **Settings → Pipeline integration** page — just wired for CI, with a
@@ -18,9 +30,12 @@ severity gate, SARIF upload, build artifacts, and a GitHub job summary.
 ```
 .
 ├── .github/
-│   ├── workflows/djini-security-scan.yml   # the workflow
-│   └── scripts/djini-scan.sh               # the scan runner (curl + jq)
-├── sample-app/                             # bundled Android lab (Gradle) it builds & scans
+│   ├── workflows/
+│   │   ├── djini-android.yml    # Android pipeline
+│   │   └── djini-ios.yml        # iOS pipeline
+│   └── scripts/djini-scan.sh    # the scan runner (curl + jq), shared
+├── sample-app/                  # bundled Android lab (Gradle)
+├── sample-app-ios/              # bundled iOS lab (Objective-C) + prebuilt IPA
 └── README.md
 ```
 
@@ -54,17 +69,36 @@ console login.
    gh secret   set DJINI_API_KEY  --body 'sk-...'
    gh variable set DJINI_BASE_URL --body 'https://app.djini.ai'
    ```
-That's it — push (or hit **Run workflow**), and it builds `sample-app/` and scans
-it on every PR and on `main`.
+That's it — go to the **Actions** tab, pick **djini security scan (Android)** or
+**(iOS)**, and hit **Run workflow**.
 
-**To scan your own app instead:** replace the `Build APK` step in
-[`.github/workflows/djini-security-scan.yml`](.github/workflows/djini-security-scan.yml)
-with your build, so `steps.build.outputs.artifact` points at your built file, and
-delete `sample-app/` if you don't need it. An iOS note is in the workflow comments.
+**To scan your own app instead:** in the matching workflow
+([`djini-android.yml`](.github/workflows/djini-android.yml) /
+[`djini-ios.yml`](.github/workflows/djini-ios.yml)) replace the build step so
+`steps.build.outputs.artifact` points at your built file, and delete the bundled
+`sample-app/` / `sample-app-ios/` you don't need.
 
-> **Adding this to an existing repo instead of using this template?** Copy
-> `.github/workflows/djini-security-scan.yml` and `.github/scripts/djini-scan.sh`
-> into the same paths in your repo, then do steps 1–3 above.
+> **Adding this to an existing repo instead of using this template?** Copy the
+> workflow you want and `.github/scripts/djini-scan.sh` into the same paths in
+> your repo, then do steps 1–2 above.
+
+## Quick source scan vs. full scan
+
+The workflow has a `scan_type` picker (in **Run workflow**, or edit its default):
+
+| `scan_type` | What runs | Speed | Best for |
+|-------------|-----------|-------|----------|
+| `quick-source` *(default)* | djini's **AI source scan** — a MASVS/MASWE swarm over your **source** (no decompile, no device) | fast | every PR / merge gate |
+| `full` | the full binary scan (decompile + static + dynamic) of the built app | slow | release / nightly |
+
+On `push`/`pull_request` (no inputs) the default `quick-source` applies. Under the
+hood the script picks the mode from a single flag: `--source <dir>` runs the quick
+source scan (it sends that tree to djini and triggers the source scan); omit it for
+the full binary scan. `--deep-scan` only applies to `full`.
+
+Both modes still build + upload the app so djini has the artifact; `quick-source`
+additionally sends the source tree (`sample-app/`) and scans that instead of
+decompiling.
 
 ## Tuning the gate
 

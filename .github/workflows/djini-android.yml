@@ -1,33 +1,41 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# djini mobile security scan — GitHub Actions demo
+# djini mobile security scan — ANDROID (GitHub Actions demo)
 #
-# Copy this file into YOUR repository at .github/workflows/djini-security-scan.yml
-# and copy scripts/djini-scan.sh into .github/scripts/ (or vendor it however you
-# like). It builds your mobile app, scans it with djini, attaches the report to
-# the run, and fails the build when findings exceed your threshold.
+# Builds the bundled Android lab (sample-app/), scans it with djini, attaches the
+# report + SARIF to the run, and fails the build when findings exceed your
+# threshold. See djini-ios.yml for the iOS equivalent.
 #
 # Setup (one-time):
 #   1. Create a djini API key:  djini → Settings → API key.
-#   2. Add repository secrets (Settings → Secrets and variables → Actions):
-#        DJINI_API_KEY   your djini API key (sk-...)
-#        DJINI_BASE_URL  your djini URL, e.g. https://app.djini.ai
-#   3. Point the "Build" step at your real build (or upload a prebuilt binary).
+#   2. Repo → Settings → Secrets and variables → Actions:
+#        DJINI_API_KEY   (Secret)   your djini API key (sk-...)
+#        DJINI_BASE_URL  (Variable) your djini URL, e.g. https://app.djini.ai
+#   3. For your own app, point the "Build APK" step at your build.
 # ─────────────────────────────────────────────────────────────────────────────
-name: djini security scan
+name: djini security scan (Android)
 
+# Manual trigger only — run it from the Actions tab ("Run workflow"). Uncomment
+# push/pull_request below to gate every PR automatically.
 on:
-  push:
-    branches: [main]
-  pull_request:
+  # push:
+  #   branches: [main]
+  # pull_request:
   workflow_dispatch:
     inputs:
+      scan_type:
+        description: "Scan type"
+        type: choice
+        default: quick-source
+        options:
+          - quick-source   # fast AI source scan (MASVS/MASWE) on the source tree
+          - full           # full binary scan (decompile + dynamic) of the built app
       fail_on:
         description: "Fail the build at/above this severity"
         type: choice
         default: high
         options: [critical, high, medium, low, none]
       deep_scan:
-        description: "Also run the deep scan (slower, deeper)"
+        description: "Also run the deep scan (only applies to 'full')"
         type: boolean
         default: false
 
@@ -49,13 +57,9 @@ jobs:
         uses: actions/checkout@v4
 
       # ── Build the app ─────────────────────────────────────────────────────
-      # This demo builds the bundled sample Android app (sample-app/, an
-      # intentionally-vulnerable lab). For your own project, point these steps
-      # at your build — the only contract is that `steps.build.outputs.artifact`
-      # ends up holding the path to a single .apk / .aab / .ipa.
-      #
-      # iOS: archive & export a .ipa on a `macos-latest` runner, then upload it
-      # as an artifact and download it in an ubuntu job that runs the scan.
+      # Builds the bundled Android lab (sample-app/). For your own project, point
+      # these steps at your build — the only contract is that
+      # `steps.build.outputs.artifact` holds the path to a single .apk / .aab.
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
@@ -88,9 +92,12 @@ jobs:
           BASE_URL: ${{ vars.DJINI_BASE_URL }}
         run: |
           chmod +x .github/scripts/djini-scan.sh
+          # scan_type: quick-source (default) passes the source tree for the fast
+          # AI source scan; 'full' omits it and runs the binary scan.
           .github/scripts/djini-scan.sh \
             --file "${{ steps.build.outputs.artifact }}" \
             --fail-on "${{ inputs.fail_on || 'high' }}" \
+            ${{ (inputs.scan_type != 'full') && '--source sample-app' || '' }} \
             ${{ (inputs.deep_scan && '--deep-scan') || '' }} \
             --output "djini-report.pdf" \
             --findings "djini-findings.json" \
