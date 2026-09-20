@@ -285,7 +285,7 @@ sev_badge() {  # $1=count  $2=hex colour when >0  $3=always (keep colour at 0)
 }
 summary "| Severity | Findings |"
 summary "|:---------|:---------|"
-summary "| Critical      | $(sev_badge "$CRITICAL" a4161a always) |"
+summary "| Critical      | $(sev_badge "$CRITICAL" a4161a) |"
 summary "| High          | $(sev_badge "$HIGH" f3801f) |"
 summary "| Medium        | $(sev_badge "$MEDIUM" e0b000) |"
 summary "| Low           | $(sev_badge "$LOW" 30a46c) |"
