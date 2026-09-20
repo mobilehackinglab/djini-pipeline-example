@@ -300,16 +300,22 @@ if [[ -f "$SARIF_OUT" && "$TOTAL" -gt 0 ]]; then
     | (.properties.masvs // "Other") as $c
     | (.properties.severity // "Unknown") as $s
     | ({Critical:0,High:1,Medium:2,Low:3,Informational:4}[$s] // 5) as $r
-    | [ $c, ($r|tostring), $s, ((.message.text // "") | split("—")[0] | gsub("^\\s+|\\s+$";"") | .[0:90]) ]
+    | (.properties.maswe // .ruleId // "") as $m
+    | [ $c, ($r|tostring), $s, $m, ((.message.text // "") | split("—")[0] | gsub("^\\s+|\\s+$";"") | .[0:90]) ]
     | @tsv' "$SARIF_OUT" 2>/dev/null | sort -t"$(printf '\t')" -k1,1 -k2,2n)
   if [[ -n "$ROWS" ]]; then
     summary "### Findings by MASVS category"
     summary ""
-    summary "| MASVS Category | Severity | Finding |"
-    summary "|---------------|----------|---------|"
-    while IFS="$(printf '\t')" read -r cat _rank sev title; do
+    summary "| MASVS Category | MASWE | Severity | Finding |"
+    summary "|:--------------|:------|:---------|:--------|"
+    while IFS="$(printf '\t')" read -r cat _rank sev maswe title; do
       [[ -z "$cat" ]] && continue
-      summary "| $cat | $sev | $title |"
+      if [[ -n "$maswe" && "$maswe" == MASWE-* ]]; then
+        maswe_cell="[$maswe](https://mas.owasp.org/MASWE/$cat/$maswe/)"
+      else
+        maswe_cell="—"
+      fi
+      summary "| $cat | $maswe_cell | $sev | $title |"
     done <<< "$ROWS"
     summary ""
   fi
