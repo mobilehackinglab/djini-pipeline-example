@@ -1,7 +1,6 @@
 [versions]
-agp = "8.10.1"
+agp = "9.0.1"
 dsbridgeAndroid = "v3.0.0"
-kotlin = "2.0.21"
 coreKtx = "1.10.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
@@ -28,5 +27,6 @@ okhttp3 = { module = "com.squareup.okhttp3:okhttp3", version.ref = "okhttp3" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+# Kotlin is built into AGP 9 (KGP 2.2.10 comes as an AGP runtime dependency),
+# so no separate org.jetbrains.kotlin.android plugin is needed.
 
