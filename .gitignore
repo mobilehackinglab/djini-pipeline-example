@@ -1,0 +1,12 @@
+# scan artifacts produced by djini-scan.sh
+*.pdf
+djini-findings.json
+djini-results.sarif
+
+# build outputs (customer apps)
+*.apk
+*.aab
+*.ipa
+
+# OS / editor cruft
+.DS_Store
