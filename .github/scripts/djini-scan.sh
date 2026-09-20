@@ -128,25 +128,21 @@ emit_output "app_name" "$APP_NAME"
 
 # ── 2. process ───────────────────────────────────────────────────────────────
 header "Process"
-echo "  Starting scan for $PROJECT_NAME ..."
+# Set the scan depth explicitly so djini doesn't fall back to a server-side
+# default (or config inherited from a previous scan of the same app). deepScan
+# defaults OFF here for a fast standard scan; enable it with --deep-scan.
+DEEP_FLAG=false
+[[ -n "$DEEP_SCAN" ]] && DEEP_FLAG=true
+PROCESS_BODY=$(jq -nc --argjson deep "$DEEP_FLAG" '{deepScan: $deep, nativeScan: false}')
+echo "  Starting scan for $PROJECT_NAME (deepScan=$DEEP_FLAG) ..."
 
 PROCESS_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
-  -X POST -H "Content-Type: application/json" -d '{}' \
+  -X POST -H "Content-Type: application/json" -d "$PROCESS_BODY" \
   "${BASE_URL}/api/dashboard/scans/${PROJECT_NAME}/process") || die "Process request failed"
 
 PROCESS_ERROR=$(echo "$PROCESS_RESP" | jq -r '.error // empty')
 [[ -n "$PROCESS_ERROR" ]] && die "Process failed: $PROCESS_ERROR"
 echo "  Scan started."
-
-if [[ -n "$DEEP_SCAN" ]]; then
-  echo "  Requesting deep scan ..."
-  DEEP_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
-    -X POST -H "Content-Type: application/json" -d '{}' \
-    "${BASE_URL}/api/dashboard/scans/${PROJECT_NAME}/deep-scan") \
-    || echo "  Warning: deep-scan request failed (continuing with standard scan)."
-  DEEP_ERROR=$(echo "${DEEP_RESP:-}" | jq -r '.error // empty' 2>/dev/null || true)
-  [[ -n "$DEEP_ERROR" ]] && echo "  Warning: deep-scan not started: $DEEP_ERROR"
-fi
 
 # ── 3. poll ──────────────────────────────────────────────────────────────────
 header "Polling scan: $PROJECT_NAME"
