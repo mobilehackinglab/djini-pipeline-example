@@ -134,8 +134,9 @@ if [[ -n "$SOURCE_DIR" ]]; then
   PROJECT_NAME=$(echo "$UPLOAD_RESP" | jq -r '.projectName // empty')
   [[ -n "$PROJECT_NAME" ]] || die "Could not parse projectName from response: $UPLOAD_RESP"
   APP_NAME=$(echo "$UPLOAD_RESP" | jq -r '.appName // "unknown"')
+  APP_VERSION=$(echo "$UPLOAD_RESP" | jq -r '.appVersion // .app_version // ""')
   PLATFORM=$(echo "$UPLOAD_RESP" | jq -r '.platform // "unknown"')
-  echo "  App: $APP_NAME ($PLATFORM)   Project: $PROJECT_NAME"
+  echo "  App: $APP_NAME${APP_VERSION:+ v$APP_VERSION} ($PLATFORM)   Project: $PROJECT_NAME"
   emit_output "project" "$PROJECT_NAME"
   emit_output "app_name" "$APP_NAME"
 
@@ -236,7 +237,7 @@ RISK=$(jq -r '.riskLevel // "?"' "$FINDINGS_JSON")
 emit_output "critical" "$CRITICAL"; emit_output "high" "$HIGH"; emit_output "medium" "$MEDIUM"
 emit_output "low" "$LOW"; emit_output "informational" "$INFO"; emit_output "total" "$TOTAL"
 
-printf "  ${RED}Critical %d${RESET}  ${DARK_RED}High %d${RESET}  ${YELLOW}Medium %d${RESET}  ${BLUE}Low %d${RESET}  ${GREY}Info %d${RESET}\n" \
+printf "  ${RED}Critical %d${RESET}  ${DARK_RED}High %d${RESET}  ${YELLOW}Medium %d${RESET}  ${GREEN}Low %d${RESET}  ${BLUE}Info %d${RESET}\n" \
   "$CRITICAL" "$HIGH" "$MEDIUM" "$LOW" "$INFO"
 echo "  Total: $TOTAL   Risk level: $RISK"
 
@@ -269,17 +270,20 @@ fi
 REPORT_URL="${BASE_URL}/dashboard/scans/${PROJECT_NAME}/report"
 VER_SUFFIX=""
 [[ -n "$APP_VERSION" && "$APP_VERSION" != "?" ]] && VER_SUFFIX=" v$APP_VERSION"
-summary "## 🛡️ djini security scan — \`$APP_NAME\`$VER_SUFFIX"
+SCAN_TYPE_LABEL="Full Binary Scan"
+[[ -n "$SOURCE_DIR" ]] && SCAN_TYPE_LABEL="AI Source Code Scan"
+DJINI_LOGO='<img src="https://app.djini.ai/static/img/logo/Djini.svg" alt="Djini" height="22" align="absmiddle">'
+summary "## $DJINI_LOGO Djini.AI Security Scan — \`$APP_NAME\`$VER_SUFFIX"
 summary ""
-summary "**Project:** \`$PROJECT_NAME\` · **Platform:** $PLATFORM · **Risk level:** $RISK · **Gate:** \`--fail-on $FAIL_ON\`"
+summary "**Scan type:** $SCAN_TYPE_LABEL · **Project:** \`$PROJECT_NAME\` · **Platform:** $PLATFORM · **Risk level:** $RISK · **Gate:** \`--fail-on $FAIL_ON\`"
 summary ""
 summary "| Severity | Count |"
 summary "|----------|------:|"
 summary "| 🔴 Critical | $CRITICAL |"
 summary "| 🟠 High | $HIGH |"
 summary "| 🟡 Medium | $MEDIUM |"
-summary "| 🔵 Low | $LOW |"
-summary "| ⚪ Informational | $INFO |"
+summary "| 🟢 Low | $LOW |"
+summary "| 🔵 Informational | $INFO |"
 summary "| **Total** | **$TOTAL** |"
 summary ""
 summary "[View full report in djini]($REPORT_URL)"

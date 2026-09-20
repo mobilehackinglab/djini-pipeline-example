@@ -38,6 +38,10 @@ on:
         description: "Also run the deep scan (only applies to 'full')"
         type: boolean
         default: false
+      create_issues:
+        description: "Open a GitHub issue per finding (fallback when Code Scanning is unavailable)"
+        type: boolean
+        default: false
 
 # Cancel superseded runs on the same ref to save minutes.
 concurrency:
@@ -51,7 +55,8 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: read
-      security-events: write   # required to upload SARIF to GitHub Code Scanning
+      security-events: write   # upload SARIF to GitHub Code Scanning (needs GHAS on private repos)
+      issues: write            # optional: open issues from findings (create_issues)
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -122,6 +127,16 @@ jobs:
         with:
           sarif_file: djini-results.sarif
           category: djini
+
+      # ── Optional: open a GitHub issue per finding (no GHAS needed) ────────
+      - name: Create issues from findings
+        if: always() && inputs.create_issues && hashFiles('djini-results.sarif') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FAIL_ON: ${{ inputs.fail_on || 'high' }}
+        run: |
+          chmod +x .github/scripts/djini-issues.sh
+          .github/scripts/djini-issues.sh djini-results.sarif
 
       # ── Keep the evidence ─────────────────────────────────────────────────
       - name: Upload djini report
