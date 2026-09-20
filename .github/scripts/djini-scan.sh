@@ -279,13 +279,13 @@ summary "**Scan type:** $SCAN_TYPE_LABEL · **Project:** \`$PROJECT_NAME\` · **
 summary ""
 # Clean, muted count badges (shields.io) — zeros go gray so the eye lands on
 # what actually matters. GitHub strips CSS, so images are the way to get colour.
-sev_badge() {  # $1=count  $2=hex colour when >0
-  local color="$2"; [[ "${1:-0}" -eq 0 ]] && color="e5e7eb"
+sev_badge() {  # $1=count  $2=hex colour when >0  $3=always (keep colour at 0)
+  local color="$2"; [[ "${1:-0}" -eq 0 && -z "${3:-}" ]] && color="e5e7eb"
   echo "![${1}](https://img.shields.io/badge/${1}-${color}?style=flat-square)"
 }
 summary "| Severity | Findings |"
-summary "|----------|:--------:|"
-summary "| Critical      | $(sev_badge "$CRITICAL" e5484d) |"
+summary "|:---------|:---------|"
+summary "| Critical      | $(sev_badge "$CRITICAL" a4161a always) |"
 summary "| High          | $(sev_badge "$HIGH" f3801f) |"
 summary "| Medium        | $(sev_badge "$MEDIUM" e0b000) |"
 summary "| Low           | $(sev_badge "$LOW" 30a46c) |"
