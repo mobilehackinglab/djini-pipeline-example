@@ -7,7 +7,9 @@ djini-results.sarif
 *.apk
 *.aab
 *.ipa
-# ...except the iOS demo's prebuilt IPA (CI can't sign a build without secrets)
+# ...except the demo's prebuilt binaries (used so the pipelines run without a
+# build toolchain / iOS signing secrets)
+!sample-app/mhl-lab-tokenbleed.apk
 !sample-app-ios/Linkliar.ipa
 
 # OS / editor cruft

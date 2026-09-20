@@ -56,28 +56,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ── Build the app ─────────────────────────────────────────────────────
-      # Builds the bundled Android lab (sample-app/). For your own project, point
-      # these steps at your build — the only contract is that
-      # `steps.build.outputs.artifact` holds the path to a single .apk / .aab.
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Build APK
+      # ── Provide the APK ───────────────────────────────────────────────────
+      # Demo: use the committed prebuilt APK so the pipeline runs fast without a
+      # Gradle toolchain (mirrors the iOS workflow). To build from source
+      # instead, delete this step and uncomment the Gradle block below.
+      - name: Provide APK
         id: build
-        working-directory: sample-app
         run: |
-          chmod +x ./gradlew
-          ./gradlew --no-daemon assembleRelease
-          apk="$(ls app/build/outputs/apk/release/*.apk | head -1)"
-          echo "Built: $apk"
-          echo "artifact=sample-app/$apk" >> "$GITHUB_OUTPUT"
+          apk="sample-app/mhl-lab-tokenbleed.apk"
+          test -f "$apk" || { echo "::error::$apk not found"; exit 1; }
+          echo "artifact=$apk" >> "$GITHUB_OUTPUT"
+
+      # ── Build from source (alternative to the prebuilt APK above) ──────────
+      # Uncomment to build sample-app/ with Gradle and scan the fresh APK. For
+      # your own project, point these steps at your build — the only contract is
+      # that `steps.build.outputs.artifact` holds the path to a single .apk/.aab.
+      #
+      # - name: Set up JDK
+      #   uses: actions/setup-java@v4
+      #   with:
+      #     distribution: temurin
+      #     java-version: "17"
+      #
+      # - name: Set up Gradle
+      #   uses: gradle/actions/setup-gradle@v4
+      #
+      # - name: Build APK
+      #   id: build
+      #   working-directory: sample-app
+      #   run: |
+      #     chmod +x ./gradlew
+      #     ./gradlew --no-daemon assembleRelease
+      #     apk="$(ls app/build/outputs/apk/release/*.apk | head -1)"
+      #     echo "artifact=sample-app/$apk" >> "$GITHUB_OUTPUT"
 
       - name: Install scan dependencies
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq

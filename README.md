@@ -8,20 +8,22 @@ the scan → surface findings in the PR (GitHub Code Scanning) → attach the re
 This repo is **runnable as-is** and ships **two pipelines**, each with a bundled
 lab app:
 
-| Pipeline | Workflow | Lab app | Build |
-|----------|----------|---------|-------|
-| **Android** | `djini-android.yml` | [`sample-app/`](sample-app/) (Gradle) | builds the APK in CI |
-| **iOS** | `djini-ios.yml` | [`sample-app-ios/`](sample-app-ios/) (Objective-C "Linkliar") | uses the prebuilt `.ipa`¹ |
+| Pipeline | Workflow | Lab app | Binary |
+|----------|----------|---------|--------|
+| **Android** | `djini-android.yml` | [`sample-app/`](sample-app/) (Gradle) | prebuilt APK by default¹ |
+| **iOS** | `djini-ios.yml` | [`sample-app-ios/`](sample-app-ios/) (Objective-C "Linkliar") | prebuilt IPA² |
 
 Both are **manual** (run from the **Actions** tab → *Run workflow*) — uncomment the
 `push`/`pull_request` triggers to gate PRs automatically. To adopt one for your own
-project, swap its build step for your app's build (the only contract is that it
-hands the scan a single `.apk` / `.aab` / `.ipa`).
+project, point its build step at your app (the only contract is that it hands the
+scan a single `.apk` / `.aab` / `.ipa`).
 
-¹ Building an `.ipa` in CI needs Apple signing secrets, which a demo shouldn't
-require — so the iOS workflow uses the committed prebuilt IPA for the upload and
-scans the Objective-C source. Swap in a `macos-latest` `xcodebuild` job to build
-for real (see the workflow header).
+¹ To keep the demo fast, the Android workflow uses the committed prebuilt APK; a
+commented-out Gradle block builds `sample-app/` from source instead.
+² Building an `.ipa` in CI needs Apple signing secrets, which a demo shouldn't
+require — so the iOS workflow uses the committed prebuilt IPA and scans the
+Objective-C source. Swap in a `macos-latest` `xcodebuild` job to build for real
+(see the workflow header).
 
 It uses the same public API as the `example.sh` script you can download from your
 djini **Settings → Pipeline integration** page — just wired for CI, with a
