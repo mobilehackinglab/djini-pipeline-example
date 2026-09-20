@@ -85,10 +85,16 @@ done
 # ── validation ───────────────────────────────────────────────────────────────
 command -v curl >/dev/null 2>&1 || die "'curl' is required but not installed"
 command -v jq   >/dev/null 2>&1 || die "'jq' is required but not installed"
-[[ -n "$FILE"     ]] || die "No file specified. Use --file or -f"
-[[ -f "$FILE"     ]] || die "File not found: $FILE"
 [[ -n "$API_KEY"  ]] || die "No API key provided. Use --api-key or set API_KEY"
 [[ -n "$BASE_URL" ]] || die "No base URL provided. Use --base-url or set BASE_URL"
+if [[ -n "$SOURCE_DIR" ]]; then
+  # Source-only scan: no binary needed.
+  [[ -d "$SOURCE_DIR" ]] || die "Source dir not found: $SOURCE_DIR"
+  command -v zip >/dev/null 2>&1 || die "'zip' is required for --source"
+else
+  [[ -n "$FILE" ]] || die "No file specified. Use --file (or --source for a source-only scan)"
+  [[ -f "$FILE" ]] || die "File not found: $FILE"
+fi
 
 case "$FAIL_ON" in
   critical|high|medium|low|none) ;;
@@ -96,7 +102,6 @@ case "$FAIL_ON" in
 esac
 
 BASE_URL="${BASE_URL%/}"
-FILENAME="$(basename "$FILE")"
 
 [[ -n "$VERBOSE" ]] && set -x
 
@@ -105,49 +110,31 @@ CURL_OPTS=(-sS --fail-with-body)
 [[ -n "$SKIP_TLS_VERIFY" ]] && CURL_OPTS+=(-k)
 AUTH=(-H "Authorization: Bearer $API_KEY")
 
-# ── 1. upload ────────────────────────────────────────────────────────────────
-header "Upload"
-echo "  Uploading $FILENAME to $BASE_URL ..."
-
-UPLOAD_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
-  -F "file=@$FILE" \
-  "${BASE_URL}/api/dashboard/upload") || die "Upload request failed"
-
-ERROR=$(echo "$UPLOAD_RESP" | jq -r '.error // empty')
-[[ -n "$ERROR" ]] && die "Upload failed: $ERROR"
-
-PROJECT_NAME=$(echo "$UPLOAD_RESP" | jq -r '.projectName // .project_name // empty')
-[[ -n "$PROJECT_NAME" ]] || die "Could not parse projectName from upload response: $UPLOAD_RESP"
-
-APP_NAME=$(echo "$UPLOAD_RESP"    | jq -r '.appName    // .app_name    // "unknown"')
-APP_VERSION=$(echo "$UPLOAD_RESP" | jq -r '.appVersion // .app_version // "?"')
-PLATFORM=$(echo "$UPLOAD_RESP"    | jq -r '.platform              // "unknown"')
-
-echo "  App:     $APP_NAME v$APP_VERSION ($PLATFORM)"
-echo "  Project: $PROJECT_NAME"
-emit_output "project" "$PROJECT_NAME"
-emit_output "app_name" "$APP_NAME"
-
-# ── 2. process ───────────────────────────────────────────────────────────────
+# ── 1. create project + start scan ───────────────────────────────────────────
 if [[ -n "$SOURCE_DIR" ]]; then
-  # Fast path: AI source scan on the real source (no decompile, no device).
-  # Send the source tree to /git-clone, then trigger /source-scan.
-  [[ -d "$SOURCE_DIR" ]] || die "Source dir not found: $SOURCE_DIR"
-  command -v zip >/dev/null 2>&1 || die "'zip' is required for --source"
-
+  # ── Source-only fast path ──────────────────────────────────────────────────
+  # No binary upload/decompile: create the project straight from the source zip,
+  # then run the AI source scan (MASVS swarm). Avoids the slow /upload path.
   header "Source"
   SRC_ZIP="$(mktemp -t djini-src-XXXX).zip"
   echo "  Packaging $SOURCE_DIR ..."
   ( cd "$SOURCE_DIR" && zip -qr "$SRC_ZIP" . \
       -x '*/build/*' '*/.gradle/*' '*/.git/*' '*/node_modules/*' '*/Pods/*' '*.apk' '*.aab' '*.ipa' )
 
-  echo "  Uploading source to djini ..."
-  GC_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
+  echo "  Uploading source to $BASE_URL ..."
+  UPLOAD_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
     -F "file=@$SRC_ZIP" \
-    "${BASE_URL}/api/dashboard/scans/${PROJECT_NAME}/git-clone") || die "Source upload (git-clone) failed"
+    "${BASE_URL}/api/dashboard/scans/upload-source") || die "Source upload failed"
   rm -f "$SRC_ZIP"
-  GC_ERROR=$(echo "$GC_RESP" | jq -r '.error // empty')
-  [[ -n "$GC_ERROR" ]] && die "Source rejected: $GC_ERROR"
+  ERROR=$(echo "$UPLOAD_RESP" | jq -r '.error // empty')
+  [[ -n "$ERROR" ]] && die "Source upload failed: $ERROR"
+  PROJECT_NAME=$(echo "$UPLOAD_RESP" | jq -r '.projectName // empty')
+  [[ -n "$PROJECT_NAME" ]] || die "Could not parse projectName from response: $UPLOAD_RESP"
+  APP_NAME=$(echo "$UPLOAD_RESP" | jq -r '.appName // "unknown"')
+  PLATFORM=$(echo "$UPLOAD_RESP" | jq -r '.platform // "unknown"')
+  echo "  App: $APP_NAME ($PLATFORM)   Project: $PROJECT_NAME"
+  emit_output "project" "$PROJECT_NAME"
+  emit_output "app_name" "$APP_NAME"
 
   header "AI source scan"
   echo "  Starting AI source scan (MASVS swarm) for $PROJECT_NAME ..."
@@ -157,27 +144,41 @@ if [[ -n "$SOURCE_DIR" ]]; then
   SS_ERROR=$(echo "$SS_RESP" | jq -r '.error // empty')
   [[ -n "$SS_ERROR" ]] && die "AI source scan failed to start: $SS_ERROR"
   echo "  Scan started."
-  # fall through to polling
+else
+  # ── Full binary scan ───────────────────────────────────────────────────────
+  header "Upload"
+  FILENAME="$(basename "$FILE")"
+  echo "  Uploading $FILENAME to $BASE_URL ..."
+  UPLOAD_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
+    -F "file=@$FILE" \
+    "${BASE_URL}/api/dashboard/upload") || die "Upload request failed"
+  ERROR=$(echo "$UPLOAD_RESP" | jq -r '.error // empty')
+  [[ -n "$ERROR" ]] && die "Upload failed: $ERROR"
+  PROJECT_NAME=$(echo "$UPLOAD_RESP" | jq -r '.projectName // .project_name // empty')
+  [[ -n "$PROJECT_NAME" ]] || die "Could not parse projectName from upload response: $UPLOAD_RESP"
+  APP_NAME=$(echo "$UPLOAD_RESP"    | jq -r '.appName    // .app_name    // "unknown"')
+  APP_VERSION=$(echo "$UPLOAD_RESP" | jq -r '.appVersion // .app_version // "?"')
+  PLATFORM=$(echo "$UPLOAD_RESP"    | jq -r '.platform              // "unknown"')
+  echo "  App:     $APP_NAME v$APP_VERSION ($PLATFORM)"
+  echo "  Project: $PROJECT_NAME"
+  emit_output "project" "$PROJECT_NAME"
+  emit_output "app_name" "$APP_NAME"
+
+  header "Process"
+  # Set the scan depth explicitly so djini doesn't fall back to a server-side
+  # default (or config inherited from a previous scan). deepScan defaults OFF;
+  # enable with --deep-scan.
+  DEEP_FLAG=false
+  [[ -n "$DEEP_SCAN" ]] && DEEP_FLAG=true
+  PROCESS_BODY=$(jq -nc --argjson deep "$DEEP_FLAG" '{deepScan: $deep, nativeScan: false}')
+  echo "  Starting scan for $PROJECT_NAME (deepScan=$DEEP_FLAG) ..."
+  PROCESS_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
+    -X POST -H "Content-Type: application/json" -d "$PROCESS_BODY" \
+    "${BASE_URL}/api/dashboard/scans/${PROJECT_NAME}/process") || die "Process request failed"
+  PROCESS_ERROR=$(echo "$PROCESS_RESP" | jq -r '.error // empty')
+  [[ -n "$PROCESS_ERROR" ]] && die "Process failed: $PROCESS_ERROR"
+  echo "  Scan started."
 fi
-
-if [[ -z "$SOURCE_DIR" ]]; then
-header "Process"
-# Set the scan depth explicitly so djini doesn't fall back to a server-side
-# default (or config inherited from a previous scan of the same app). deepScan
-# defaults OFF here for a fast standard scan; enable it with --deep-scan.
-DEEP_FLAG=false
-[[ -n "$DEEP_SCAN" ]] && DEEP_FLAG=true
-PROCESS_BODY=$(jq -nc --argjson deep "$DEEP_FLAG" '{deepScan: $deep, nativeScan: false}')
-echo "  Starting scan for $PROJECT_NAME (deepScan=$DEEP_FLAG) ..."
-
-PROCESS_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
-  -X POST -H "Content-Type: application/json" -d "$PROCESS_BODY" \
-  "${BASE_URL}/api/dashboard/scans/${PROJECT_NAME}/process") || die "Process request failed"
-
-PROCESS_ERROR=$(echo "$PROCESS_RESP" | jq -r '.error // empty')
-[[ -n "$PROCESS_ERROR" ]] && die "Process failed: $PROCESS_ERROR"
-echo "  Scan started."
-fi   # end: standard (non --source) scan path
 
 # ── 3. poll ──────────────────────────────────────────────────────────────────
 header "Polling scan: $PROJECT_NAME"
