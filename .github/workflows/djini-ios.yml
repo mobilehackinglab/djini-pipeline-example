@@ -94,6 +94,9 @@ jobs:
 
       - name: Upload SARIF to code scanning
         if: always() && hashFiles('djini-results.sarif') != ''
+        # Don't fail the run when Code Scanning isn't available (e.g. private repo
+        # without GitHub Advanced Security) — it just logs and moves on.
+        continue-on-error: true
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: djini-results.sarif
