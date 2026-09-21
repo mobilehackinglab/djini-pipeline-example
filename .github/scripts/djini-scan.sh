@@ -311,7 +311,7 @@ if [[ -f "$SARIF_OUT" && "$TOTAL" -gt 0 ]]; then
     while IFS="$(printf '\t')" read -r cat _rank sev maswe title; do
       [[ -z "$cat" ]] && continue
       if [[ -n "$maswe" && "$maswe" == MASWE-* ]]; then
-        maswe_cell="[$maswe](https://mas.owasp.org/MASWE/$cat/$maswe/)"
+        maswe_cell="<a href=\"https://mas.owasp.org/MASWE/$cat/$maswe/\" target=\"_blank\" rel=\"noopener\">$maswe</a>"
       else
         maswe_cell="—"
       fi
@@ -322,7 +322,7 @@ if [[ -f "$SARIF_OUT" && "$TOTAL" -gt 0 ]]; then
 fi
 
 DETAILS_URL="${BASE_URL}/dashboard/scans/${PROJECT_NAME}"
-summary "📄 [View full report]($REPORT_URL) · 🔎 [Scan details]($DETAILS_URL)"
+summary "📄 <a href=\"$REPORT_URL\" target=\"_blank\" rel=\"noopener\">View full report</a> · 🔎 <a href=\"$DETAILS_URL\" target=\"_blank\" rel=\"noopener\">Scan details</a>"
 
 # ── 8. gate the build ────────────────────────────────────────────────────────
 header "Gate (--fail-on $FAIL_ON)"
