@@ -15,6 +15,11 @@
 #   2. Repo → Settings → Secrets and variables → Actions:
 #        DJINI_API_KEY   (Secret)   your djini API key (sk-...)
 #        DJINI_BASE_URL  (Variable) your djini URL, e.g. https://app.djini.ai
+#      For the AI source scan (quick-source), also set your own model (BYOK) —
+#      or configure it once in djini → Settings → BYOK and skip these:
+#        DJINI_SOURCE_LLM_BASE_URL (Variable) e.g. https://openrouter.ai/api/v1
+#        DJINI_SOURCE_LLM_KEY      (Secret)   key for that endpoint
+#        DJINI_SOURCE_LLM_MODEL    (Variable) e.g. qwen/qwen3.8-flash
 # ─────────────────────────────────────────────────────────────────────────────
 name: Djini.AI Security Scan (iOS)
 
@@ -79,6 +84,12 @@ jobs:
         env:
           API_KEY: ${{ secrets.DJINI_API_KEY }}
           BASE_URL: ${{ vars.DJINI_BASE_URL }}
+          # AI source scan is BYOK-only — it runs on YOUR OpenAI-compatible model.
+          # Set these to register the model automatically before the source scan; or
+          # configure one once in djini -> Settings -> BYOK and leave these blank.
+          SOURCE_LLM_BASE_URL: ${{ vars.DJINI_SOURCE_LLM_BASE_URL }}
+          SOURCE_LLM_KEY: ${{ secrets.DJINI_SOURCE_LLM_KEY }}
+          SOURCE_LLM_MODEL: ${{ vars.DJINI_SOURCE_LLM_MODEL }}
         run: |
           chmod +x .github/scripts/djini-scan.sh
           # quick-source scans the Objective-C source (sample-app-ios);

@@ -102,6 +102,29 @@ Both modes still build + upload the app so djini has the artifact; `quick-source
 additionally sends the source tree (`sample-app-android/`) and scans that instead of
 decompiling.
 
+### AI source scan needs your own model (BYOK)
+
+The `quick-source` AI source scan is **BYOK-only** — it runs on **your own
+OpenAI-compatible model**, not a djini-hosted one. If none is configured the scan
+trigger returns `400 { "code": "byok_required" }` and the build fails with a clear
+message. You have two options:
+
+- **Prerequisite (once):** in djini → **Settings → BYOK → OpenAI Compatible**, add a
+  base URL, API key and model. Nothing else to set in CI.
+- **Configure from CI:** set these three (base URL + model as **Variables**, key as a
+  **Secret**) and the script registers the model on the API key's account before each
+  source scan:
+
+  | Name | Kind | Example |
+  |------|------|---------|
+  | `DJINI_SOURCE_LLM_BASE_URL` | Variable | `https://openrouter.ai/api/v1` |
+  | `DJINI_SOURCE_LLM_KEY` | Secret | `sk-or-…` |
+  | `DJINI_SOURCE_LLM_MODEL` | Variable | `qwen/qwen3.8-flash` |
+
+  On the CLI these map to `--source-llm-base-url` / `--source-llm-key` /
+  `--source-llm-model` (or the `SOURCE_LLM_*` env vars). `full` scans don't need any
+  of this.
+
 ## Tuning the gate
 
 `--fail-on` decides what blocks a merge (a build fails if **any** finding at or

@@ -22,9 +22,17 @@
 #                 [--output report.pdf] [--findings findings.json] [--sarif results.sarif] \
 #                 [--skip-tls-verify] [--verbose]
 #
+# AI source scan (--source) is BYOK-only: it runs on YOUR OpenAI-compatible model.
+# Either configure one once in djini (Settings -> BYOK), or pass it here and the
+# script registers it on this API key's account before scanning:
+#   djini-scan.sh --source ./app-src --api-key sk-... --base-url https://app.djini.ai \
+#                 --source-llm-base-url https://openrouter.ai/api/v1 \
+#                 --source-llm-key sk-or-... --source-llm-model qwen/qwen3.8-flash
+#
 # Every flag also has an env var fallback (handy for CI secrets):
 #   API_KEY, BASE_URL, FAIL_ON, DEEP_SCAN, INTERVAL, TIMEOUT, OUTPUT, FINDINGS_JSON,
-#   SARIF_OUT, SKIP_TLS_VERIFY, VERBOSE
+#   SARIF_OUT, SKIP_TLS_VERIFY, VERBOSE,
+#   SOURCE_LLM_BASE_URL, SOURCE_LLM_KEY, SOURCE_LLM_MODEL
 #
 set -euo pipefail
 
@@ -40,6 +48,11 @@ OUTPUT="${OUTPUT:-}"              # PDF report path
 FINDINGS_JSON="${FINDINGS_JSON:-}"   # findings JSON path
 SARIF_OUT="${SARIF_OUT:-}"       # SARIF report path (for GitHub Code Scanning)
 SOURCE_DIR="${SOURCE_DIR:-}"     # if set: run the fast AI source scan on this source tree
+# AI source scan is BYOK-only. When these are set, the script registers this
+# OpenAI-compatible model on the API key's account (Settings -> BYOK) before scanning.
+SOURCE_LLM_BASE_URL="${SOURCE_LLM_BASE_URL:-}"  # e.g. https://openrouter.ai/api/v1
+SOURCE_LLM_KEY="${SOURCE_LLM_KEY:-}"            # key for that endpoint (blank => "not-needed")
+SOURCE_LLM_MODEL="${SOURCE_LLM_MODEL:-}"        # e.g. qwen/qwen3.8-flash
 SKIP_TLS_VERIFY="${SKIP_TLS_VERIFY:-}"
 VERBOSE="${VERBOSE:-}"
 
@@ -73,6 +86,9 @@ while [[ $# -gt 0 ]]; do
     --findings)         FINDINGS_JSON="$2";   shift 2;;
     --sarif)            SARIF_OUT="$2";       shift 2;;
     --source)           SOURCE_DIR="$2";      shift 2;;
+    --source-llm-base-url) SOURCE_LLM_BASE_URL="$2"; shift 2;;
+    --source-llm-key)      SOURCE_LLM_KEY="$2";      shift 2;;
+    --source-llm-model)    SOURCE_LLM_MODEL="$2";    shift 2;;
     --skip-tls-verify)  SKIP_TLS_VERIFY=1;    shift;;
     -V|--verbose)       VERBOSE=1;            shift;;
     -h|--help)
@@ -140,12 +156,36 @@ if [[ -n "$SOURCE_DIR" ]]; then
   emit_output "project" "$PROJECT_NAME"
   emit_output "app_name" "$APP_NAME"
 
+  # The AI source scan is BYOK-only: it runs on your own OpenAI-compatible model.
+  # When model creds are provided, register them on this API key's account first;
+  # otherwise the account must already have an OpenAI-compatible model configured
+  # (djini -> Settings -> BYOK) or the trigger below returns 400 byok_required.
+  if [[ -n "$SOURCE_LLM_BASE_URL" || -n "$SOURCE_LLM_KEY" || -n "$SOURCE_LLM_MODEL" ]]; then
+    [[ -n "$SOURCE_LLM_BASE_URL" ]] || die "--source-llm-base-url (or SOURCE_LLM_BASE_URL) is required to configure the source-scan model"
+    [[ -n "$SOURCE_LLM_MODEL"    ]] || die "--source-llm-model (or SOURCE_LLM_MODEL) is required to configure the source-scan model"
+    header "Configure AI model (BYOK)"
+    echo "  Registering OpenAI-compatible model '$SOURCE_LLM_MODEL' for the AI source scan ..."
+    BYOK_PAYLOAD=$(jq -n \
+      --arg base "$SOURCE_LLM_BASE_URL" --arg key "${SOURCE_LLM_KEY:-not-needed}" --arg model "$SOURCE_LLM_MODEL" \
+      '{providers:[{provider:"openai_compatible", baseUrl:$base, key:$key, model:$model}]}')
+    BYOK_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
+      -X PUT -H "Content-Type: application/json" -d "$BYOK_PAYLOAD" \
+      "${BASE_URL}/api/user-settings/byok") || die "Failed to configure the BYOK model"
+    BYOK_ERR=$(echo "$BYOK_RESP" | jq -r '.error // empty')
+    [[ -n "$BYOK_ERR" ]] && die "Failed to configure the BYOK model: $BYOK_ERR"
+    echo "  Model configured."
+  fi
+
   header "AI source scan"
   echo "  Starting AI source scan (MASVS swarm) for $PROJECT_NAME ..."
   SS_RESP=$(curl "${CURL_OPTS[@]}" "${AUTH[@]}" \
     -X POST -H "Content-Type: application/json" -d '{}' \
     "${BASE_URL}/api/dashboard/scans/${PROJECT_NAME}/source-scan") || die "source-scan request failed"
+  SS_CODE=$(echo "$SS_RESP" | jq -r '.code // empty')
   SS_ERROR=$(echo "$SS_RESP" | jq -r '.error // empty')
+  if [[ "$SS_CODE" == "byok_required" ]]; then
+    die "AI source scan needs your own OpenAI-compatible model. Pass --source-llm-base-url / --source-llm-key / --source-llm-model (or set SOURCE_LLM_* env), or configure one once in djini -> Settings -> BYOK."
+  fi
   [[ -n "$SS_ERROR" ]] && die "AI source scan failed to start: $SS_ERROR"
   echo "  Scan started."
 else

@@ -10,6 +10,11 @@
 #   2. Repo → Settings → Secrets and variables → Actions:
 #        DJINI_API_KEY   (Secret)   your djini API key (sk-...)
 #        DJINI_BASE_URL  (Variable) your djini URL, e.g. https://app.djini.ai
+#      For the AI source scan (quick-source), also set your own model (BYOK) —
+#      or configure it once in djini → Settings → BYOK and skip these:
+#        DJINI_SOURCE_LLM_BASE_URL (Variable) e.g. https://openrouter.ai/api/v1
+#        DJINI_SOURCE_LLM_KEY      (Secret)   key for that endpoint
+#        DJINI_SOURCE_LLM_MODEL    (Variable) e.g. qwen/qwen3.8-flash
 #   3. For your own app, point the "Build APK" step at your build.
 # ─────────────────────────────────────────────────────────────────────────────
 name: Djini.AI Security Scan (Android)
@@ -106,6 +111,13 @@ jobs:
           # The djini URL is not sensitive — a repo variable keeps it readable in
           # logs (a secret would be masked as ***). Only the API key is a secret.
           BASE_URL: ${{ vars.DJINI_BASE_URL }}
+          # AI source scan is BYOK-only — it runs on YOUR OpenAI-compatible model.
+          # Set these three (base URL as a Variable, key as a Secret) to register the
+          # model automatically before the source scan; or configure one once in
+          # djini -> Settings -> BYOK and leave these blank. Ignored for 'full' scans.
+          SOURCE_LLM_BASE_URL: ${{ vars.DJINI_SOURCE_LLM_BASE_URL }}
+          SOURCE_LLM_KEY: ${{ secrets.DJINI_SOURCE_LLM_KEY }}
+          SOURCE_LLM_MODEL: ${{ vars.DJINI_SOURCE_LLM_MODEL }}
         run: |
           chmod +x .github/scripts/djini-scan.sh
           # scan_type: quick-source (default) passes the source tree for the fast
